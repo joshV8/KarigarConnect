@@ -1,4 +1,6 @@
+import '../language.dart';
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
 import 'home_screen.dart';
 
 /// Phone + OTP login. For the hackathon demo this is entirely local —
@@ -26,22 +28,22 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('लॉगिन करें · Log in', style: Theme.of(context).textTheme.headlineSmall),
+              Text(S.get('login_title'), style: Theme.of(context).textTheme.headlineSmall),
               const SizedBox(height: 32),
               if (!_otpSent) ...[
                 TextField(
                   controller: _phoneController,
                   keyboardType: TextInputType.phone,
                   style: const TextStyle(fontSize: 20),
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     prefixIcon: Icon(Icons.phone_outlined),
-                    hintText: 'फ़ोन नंबर · Phone number',
+                    hintText: S.get('phone_hint'),
                   ),
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () => setState(() => _otpSent = true),
-                  child: const Text('OTP भेजें · Send OTP'),
+                  child: Text(S.get('send_otp')),
                 ),
               ] else ...[
                 TextField(
@@ -49,16 +51,21 @@ class _LoginScreenState extends State<LoginScreen> {
                   keyboardType: TextInputType.number,
                   style: const TextStyle(fontSize: 22, letterSpacing: 10, fontWeight: FontWeight.w600),
                   textAlign: TextAlign.center,
-                  decoration: const InputDecoration(hintText: '••••'),
+                  decoration: InputDecoration(hintText: '••••'),
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () {
+                    final phone = _phoneController.text.trim();
+                    final token = phone.isNotEmpty
+                        ? 'artisan_${phone.replaceAll(RegExp(r'\D'), '')}'
+                        : 'artisan_demo_user';
+                    ApiService.instance.setAuthToken(token);
                     Navigator.of(context).pushReplacement(
                       MaterialPageRoute(builder: (_) => const HomeScreen()),
                     );
                   },
-                  child: const Text('जांचें · Verify'),
+                  child: Text(S.get('verify')),
                 ),
               ],
             ],

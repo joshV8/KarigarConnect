@@ -1,3 +1,4 @@
+import '../language.dart';
 import 'package:flutter/material.dart';
 import '../theme.dart';
 import 'login_screen.dart';
@@ -7,7 +8,8 @@ import 'login_screen.dart';
 class LanguageSelectScreen extends StatelessWidget {
   const LanguageSelectScreen({super.key});
 
-  void _choose(BuildContext context) {
+  void _choose(BuildContext context, String lang) {
+    AppLanguage.instance.setLanguage(lang);
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => const LoginScreen()),
     );
@@ -32,17 +34,17 @@ class LanguageSelectScreen extends StatelessWidget {
                 child: const Icon(Icons.storefront_outlined, size: 44, color: AppTheme.accent),
               ),
               const SizedBox(height: 24),
-              Text('अपनी भाषा चुनें', style: Theme.of(context).textTheme.headlineSmall),
+              Text(S.get('choose_language'), style: Theme.of(context).textTheme.headlineSmall),
               const SizedBox(height: 4),
-              Text('Choose your language', style: Theme.of(context).textTheme.bodyMedium),
+              Text(S.get('choose_language'), style: Theme.of(context).textTheme.bodyMedium),
               const SizedBox(height: 48),
               ElevatedButton(
-                onPressed: () => _choose(context),
+                onPressed: () => _choose(context, 'hi'),
                 child: const Text('हिंदी'),
               ),
               const SizedBox(height: 14),
               OutlinedButton(
-                onPressed: () => _choose(context),
+                onPressed: () => _choose(context, 'en'),
                 child: const Text('English'),
               ),
             ],

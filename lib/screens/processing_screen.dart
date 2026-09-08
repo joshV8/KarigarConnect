@@ -1,3 +1,4 @@
+import '../language.dart';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import '../models/product.dart';
@@ -57,7 +58,10 @@ class _ProcessingScreenState extends State<ProcessingScreen> with SingleTickerPr
         children: [
           Hero(
             tag: 'product-photo',
-            child: SafeImage(file: widget.draft.photo),
+            child: SafeImage(
+              file: widget.draft.photo,
+              bytes: widget.draft.photoBytes,
+            ),
           ),
           Container(color: Colors.black.withValues(alpha: 0.55)),
           Center(
@@ -81,13 +85,12 @@ class _ProcessingScreenState extends State<ProcessingScreen> with SingleTickerPr
                   ),
                 ),
                 const SizedBox(height: 24),
-                const Text(
-                  'AI तैयार कर रहा है...',
+                Text(S.get('ai_preparing'),
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'AI is preparing your listing',
+                  S.get('ai_preparing'),
                   style: TextStyle(fontSize: 15, color: Colors.white.withValues(alpha: 0.8)),
                 ),
               ],

@@ -1,25 +1,32 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 /// A product that has been through the AI pipeline and is ready to
-/// preview / publish. [image] is used in mock/demo mode (a local
-/// file straight from the camera); [imageUrl] is what the real
-/// backend returns instead (Cloudinary/S3 link) once Person 2/3's
-/// pipeline is wired in — see API_CONTRACT.md.
+/// preview / publish. [image] or [imageBytes] is used for local
+/// preview; [imageUrl] is what the real backend returns (Cloudinary/S3).
 class Product {
   final String id;
   final File? image;
+  final Uint8List? imageBytes;
   final String? imageUrl;
   final String descriptionHi;
   final String descriptionEn;
+  final String? voiceTranscription;
+  final String? translatedVoiceText;
+  final String? audioUrl;
   final double price;
   final String priceReason;
 
   Product({
     required this.id,
     this.image,
+    this.imageBytes,
     this.imageUrl,
     required this.descriptionHi,
     required this.descriptionEn,
+    this.voiceTranscription,
+    this.translatedVoiceText,
+    this.audioUrl,
     required this.price,
     required this.priceReason,
   });
@@ -30,8 +37,26 @@ class Product {
 /// it's sent off for AI processing.
 class ProductDraft {
   File? photo;
+  Uint8List? photoBytes;
+  String? photoName;
+  String? photoPath;
   String? audioPath;
+  Uint8List? audioBytes;
+  String? audioName;
+  String language;
+  double? audioDuration;
   double rawMaterialCost;
 
-  ProductDraft({this.photo, this.audioPath, this.rawMaterialCost = 100});
+  ProductDraft({
+    this.photo,
+    this.photoBytes,
+    this.photoName,
+    this.photoPath,
+    this.audioPath,
+    this.audioBytes,
+    this.audioName,
+    this.language = 'hi',
+    this.audioDuration,
+    this.rawMaterialCost = 100,
+  });
 }

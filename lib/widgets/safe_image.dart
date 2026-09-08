@@ -1,26 +1,33 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 /// Displays a product photo from whichever source is available:
-/// a remote [url] (once the real backend returns Cloudinary/S3
-/// links) takes priority, then a local [file] (mock/demo mode). On
-/// Flutter web, dart:io's File can't be read at all (Image.file
-/// throws), so a local file falls back to a placeholder there —
-/// this only matters for quick web preview; the real app runs on
-/// Android/iOS.
+/// 1. A remote [url] (Cloudinary / S3 / backend static storage)
+/// 2. Raw [bytes] (Uint8List — works everywhere including Web)
+/// 3. A local [file] (dart:io File on Mobile / Desktop)
+/// 4. Fallback to aesthetic placeholder
 class SafeImage extends StatelessWidget {
   final File? file;
+  final Uint8List? bytes;
   final String? url;
   final BoxFit fit;
   final BorderRadius? borderRadius;
 
-  const SafeImage({super.key, this.file, this.url, this.fit = BoxFit.cover, this.borderRadius});
+  const SafeImage({
+    super.key,
+    this.file,
+    this.bytes,
+    this.url,
+    this.fit = BoxFit.cover,
+    this.borderRadius,
+  });
 
   @override
   Widget build(BuildContext context) {
     Widget child;
-    if (url != null) {
+    if (url != null && url!.isNotEmpty) {
       child = Image.network(
         url!,
         fit: fit,
@@ -29,6 +36,16 @@ class SafeImage extends StatelessWidget {
         loadingBuilder: (context, widget, progress) =>
             progress == null ? widget : _placeholder(),
         errorBuilder: (context, error, stack) => _placeholder(),
+      );
+    } else if (bytes != null && bytes!.isNotEmpty) {
+      child = AnimatedSwitcher(
+        duration: const Duration(milliseconds: 250),
+        child: Image.memory(
+          bytes!,
+          fit: fit,
+          width: double.infinity,
+          height: double.infinity,
+        ),
       );
     } else if (file != null && !kIsWeb) {
       child = AnimatedSwitcher(

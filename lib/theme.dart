@@ -9,7 +9,9 @@ class AppTheme {
   // Cool teal accent — feels modern/tech, fits the "AI-driven" pitch.
   static const accent = Color(0xFF0E7C86);
   static const accentDark = Color(0xFF075E66);
+  static const accentBg = Color(0xFFE2F3F5);
   static const canvas = Color(0xFFF2F6FA);
+  static const surface = Color(0xFFF2F6FA);
   static const ink = Color(0xFF1C2733);
   static const success = Color(0xFF2E7D5B);
   static const successBg = Color(0xFFE3F3EC);
@@ -36,11 +38,9 @@ class AppTheme {
         },
       ),
       textTheme: TextTheme(
-        // Conspicuously large — this is the single most important
-        // accessibility lever for low-literacy / low-confidence readers.
-        headlineSmall: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: ink, height: 1.25),
-        titleLarge: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: ink),
-        bodyLarge: TextStyle(fontSize: 18, color: ink, height: 1.4),
+        headlineSmall: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: ink, height: 1.25),
+        titleLarge: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: ink),
+        bodyLarge: const TextStyle(fontSize: 18, color: ink, height: 1.4),
         bodyMedium: TextStyle(fontSize: 16, color: ink.withValues(alpha: 0.7)),
         labelLarge: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
       ),
@@ -89,7 +89,7 @@ class AppTheme {
           borderSide: const BorderSide(color: accent, width: 2),
         ),
       ),
-      appBarTheme: AppBarTheme(
+      appBarTheme: const AppBarTheme(
         backgroundColor: canvas,
         surfaceTintColor: canvas,
         elevation: 0,

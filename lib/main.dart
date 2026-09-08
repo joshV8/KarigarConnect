@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'theme.dart';
 import 'screens/language_select_screen.dart';
+import 'language.dart';
 
 void main() {
   runApp(const ArtisanApp());
@@ -11,11 +12,16 @@ class ArtisanApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Artisan App',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.theme,
-      home: const LanguageSelectScreen(),
+    return ListenableBuilder(
+      listenable: AppLanguage.instance,
+      builder: (context, child) {
+        return MaterialApp(
+          title: 'Artisan App',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.theme,
+          home: const LanguageSelectScreen(),
+        );
+      },
     );
   }
 }

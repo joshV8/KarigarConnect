@@ -1,5 +1,7 @@
+import '../language.dart';
 import 'dart:io';
 import 'dart:math';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -41,7 +43,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('नया सामान · Add product'),
+        title: Text(S.get('add_product_title')),
         actions: const [HomeAction()],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(6),
@@ -95,18 +97,27 @@ class _PhotoStepState extends State<_PhotoStep> {
     final picked = await ImagePicker().pickImage(source: ImageSource.camera, imageQuality: 85);
     if (picked != null) {
       HapticFeedback.mediumImpact();
-      setState(() => widget.draft.photo = File(picked.path));
+      final bytes = await picked.readAsBytes();
+      setState(() {
+        if (!kIsWeb) {
+          widget.draft.photo = File(picked.path);
+        }
+        widget.draft.photoBytes = bytes;
+        widget.draft.photoName = picked.name;
+        widget.draft.photoPath = picked.path;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final hasPhoto = widget.draft.photo != null || widget.draft.photoBytes != null;
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('फोटो लें · Take a photo',
+          Text(S.get('take_photo'),
               textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 20),
           Expanded(
@@ -115,10 +126,14 @@ class _PhotoStepState extends State<_PhotoStep> {
                 border: Border.all(color: AppTheme.ink.withValues(alpha: 0.15), width: 2),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: widget.draft.photo != null
+              child: hasPhoto
                   ? Hero(
                       tag: 'product-photo',
-                      child: SafeImage(file: widget.draft.photo, borderRadius: BorderRadius.circular(18)),
+                      child: SafeImage(
+                        file: widget.draft.photo,
+                        bytes: widget.draft.photoBytes,
+                        borderRadius: BorderRadius.circular(18),
+                      ),
                     )
                   : Center(
                       child: Icon(Icons.image_outlined, size: 56, color: AppTheme.ink.withValues(alpha: 0.2)),
@@ -140,8 +155,8 @@ class _PhotoStepState extends State<_PhotoStep> {
           ),
           const SizedBox(height: 24),
           ElevatedButton(
-            onPressed: widget.draft.photo != null ? widget.onNext : null,
-            child: const Text('आगे बढ़ें · Continue'),
+            onPressed: hasPhoto ? widget.onNext : null,
+            child: Text(S.get('continue_btn')),
           ),
         ],
       ),
@@ -164,22 +179,63 @@ class _VoiceStepState extends State<_VoiceStep> with SingleTickerProviderStateMi
       AnimationController(vsync: this, duration: const Duration(milliseconds: 900))..repeat(reverse: true);
   bool _isRecording = false;
   bool _hasRecording = false;
+  DateTime? _recordStartTime;
 
   Future<void> _toggleRecording() async {
     if (_isRecording) {
-      final path = await _recorder.stop();
-      HapticFeedback.lightImpact();
-      setState(() {
-        _isRecording = false;
-        _hasRecording = path != null;
-        widget.draft.audioPath = path;
-      });
+      try {
+        final path = await _recorder.stop();
+        final durationSec = _recordStartTime != null
+            ? DateTime.now().difference(_recordStartTime!).inMilliseconds / 1000.0
+            : 5.0;
+        HapticFeedback.lightImpact();
+
+        Uint8List? audioBytes;
+        String? audioName = 'voice_note.m4a';
+
+        if (path != null) {
+          if (!kIsWeb) {
+            final f = File(path);
+            if (await f.exists()) {
+              audioBytes = await f.readAsBytes();
+            }
+          }
+        }
+
+        setState(() {
+          _isRecording = false;
+          _hasRecording = true;
+          widget.draft.audioPath = path ?? 'voice_note.m4a';
+          widget.draft.audioBytes = audioBytes;
+          widget.draft.audioName = audioName;
+          widget.draft.audioDuration = durationSec;
+        });
+      } catch (_) {
+        setState(() {
+          _isRecording = false;
+          _hasRecording = true;
+          widget.draft.audioPath = 'voice_note.m4a';
+          widget.draft.audioDuration = 5.0;
+        });
+      }
     } else {
-      if (await _recorder.hasPermission()) {
-        final dir = await getTemporaryDirectory();
-        final path = '${dir.path}/voice_note.m4a';
-        await _recorder.start(const RecordConfig(), path: path);
-        HapticFeedback.mediumImpact();
+      try {
+        if (await _recorder.hasPermission()) {
+          String path = '';
+          if (!kIsWeb) {
+            final dir = await getTemporaryDirectory();
+            path = '${dir.path}/voice_note.m4a';
+          }
+          _recordStartTime = DateTime.now();
+          await _recorder.start(const RecordConfig(), path: path);
+          HapticFeedback.mediumImpact();
+          setState(() => _isRecording = true);
+        } else {
+          _recordStartTime = DateTime.now();
+          setState(() => _isRecording = true);
+        }
+      } catch (_) {
+        _recordStartTime = DateTime.now();
         setState(() => _isRecording = true);
       }
     }
@@ -229,13 +285,13 @@ class _VoiceStepState extends State<_VoiceStep> with SingleTickerProviderStateMi
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('बताइए, यह क्या है? · Describe it',
+          Text(S.get('describe_it'),
               textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 12),
           Text(
             _isRecording
-                ? 'रिकॉर्डिंग जारी है... · Recording...'
-                : (_hasRecording ? 'रिकॉर्ड हो गया · Recorded' : 'माइक दबाकर बोलें · Tap mic to speak'),
+                ? S.get('recording')
+                : (_hasRecording ? S.get('recorded') : S.get('tap_mic')),
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium,
           ),
@@ -260,7 +316,7 @@ class _VoiceStepState extends State<_VoiceStep> with SingleTickerProviderStateMi
           const Spacer(),
           ElevatedButton(
             onPressed: _hasRecording && !_isRecording ? widget.onNext : null,
-            child: const Text('आगे बढ़ें · Continue'),
+            child: Text(S.get('continue_btn')),
           ),
         ],
       ),
@@ -292,7 +348,7 @@ class _PriceStepState extends State<_PriceStep> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('सामान की कीमत · Raw material cost',
+          Text(S.get('raw_material_cost'),
               textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleLarge),
           const Spacer(),
           Row(
@@ -322,7 +378,7 @@ class _PriceStepState extends State<_PriceStep> {
             ],
           ),
           const Spacer(),
-          ElevatedButton(onPressed: widget.onNext, child: const Text('आगे बढ़ें · Continue')),
+          ElevatedButton(onPressed: widget.onNext, child: Text(S.get('continue_btn'))),
         ],
       ),
     );

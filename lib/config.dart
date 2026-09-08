@@ -1,14 +1,23 @@
-/// Central place for backend integration settings. Person 3 sets
-/// [apiBaseUrl] once the FastAPI server is deployed; until then,
-/// [useMockApi] keeps the whole app working against ApiService's
-/// mock data so mobile work isn't blocked on backend readiness.
+/// Central configuration for the Artisan Flutter App.
+/// Supports runtime switching and build-time environment variable injection:
 ///
-/// See API_CONTRACT.md at the project root for the exact request/
-/// response shapes ApiService expects once useMockApi is false.
+/// Build for Production:
+/// `flutter build web --dart-define=API_BASE_URL=https://your-artisan-api.onrender.com`
+///
+/// Run locally against local FastAPI backend:
+/// `flutter run -d chrome --dart-define=API_BASE_URL=http://127.0.0.1:8000`
 class AppConfig {
-  static const bool useMockApi = true;
+  /// When true, simulates backend responses with local mock data.
+  /// When false, sends real HTTP requests to the FastAPI backend.
+  static const bool useMockApi = false;
 
-  /// Replace with Person 3's deployed FastAPI base URL, e.g.
-  /// 'https://artisan-api.onrender.com'
-  static const String apiBaseUrl = 'https://REPLACE_WITH_BACKEND_URL';
+  /// FastAPI Backend base URL.
+  /// Configurable via `--dart-define=API_BASE_URL=https://...` or defaults to local dev server.
+  static const String apiBaseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://127.0.0.1:8000',
+  );
+
+  /// Default bearer token for authenticated requests (mock artisan ID or Firebase ID token)
+  static String authToken = 'artisan_demo_user';
 }
