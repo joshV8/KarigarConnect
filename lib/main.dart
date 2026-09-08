@@ -12,7 +12,7 @@ class ArtisanApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Artisan App',
+      title: 'KarigarConnect',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.theme,
       home: const LanguageSelectScreen(),

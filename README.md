@@ -1,4 +1,4 @@
-# Artisan App — Flutter MVP scaffold
+# KarigarConnect — Flutter MVP scaffold
 
 Person 1's slice: mobile app + UX. This is a working skeleton with the
 full user flow wired up end-to-end using a **mocked AI response**, so

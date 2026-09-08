@@ -5,6 +5,7 @@ import '../theme.dart';
 import '../widgets/safe_image.dart';
 import '../widgets/fade_slide_in.dart';
 import '../widgets/home_action.dart';
+import '../widgets/success_overlay.dart';
 import 'home_screen.dart';
 
 /// Shows the AI's output before it goes live. Every generated field
@@ -123,9 +124,19 @@ class PreviewScreen extends StatelessWidget {
               ElevatedButton(
                 onPressed: () {
                   ApiService.instance.publish(product);
-                  Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (_) => const HomeScreen()),
-                    (route) => false,
+                  Navigator.of(context).push(
+                    PageRouteBuilder(
+                      opaque: true,
+                      pageBuilder: (_, __, ___) => SuccessOverlay(
+                        message: 'कैटलॉग में जुड़ गया!\nAdded to catalog!',
+                        onComplete: () {
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(builder: (_) => const HomeScreen()),
+                            (route) => false,
+                          );
+                        },
+                      ),
+                    ),
                   );
                 },
                 child: const Text('कैटलॉग में जोड़ें · Publish to catalog'),

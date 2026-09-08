@@ -6,6 +6,7 @@ import '../widgets/safe_image.dart';
 import '../widgets/fade_slide_in.dart';
 import 'add_product_screen.dart';
 import 'catalog_screen.dart';
+import 'product_detail_screen.dart';
 
 /// Landing screen after login: recent catalog items + one obvious
 /// next action. Deliberately not cluttered with a bottom nav bar or
@@ -19,7 +20,13 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  void _refresh() => setState(() {});
+  Future<void> _refresh() async {
+    // Placeholder for a real fetch once ApiService talks to the
+    // backend — kept async so RefreshIndicator's spinner has
+    // something to show even now.
+    await Future.delayed(const Duration(milliseconds: 400));
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   await Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const AddProductScreen()),
                   );
-                  _refresh();
+                  setState(() {});
                 },
               ),
               const SizedBox(height: 28),
@@ -58,64 +65,97 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 4),
               Expanded(
-                child: catalog.isEmpty
-                    ? Center(
-                        child: Text(
-                          'अभी कोई सामान नहीं\nNo products yet',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      )
-                    : ListView.separated(
-                        itemCount: catalog.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 12),
-                        itemBuilder: (context, i) {
-                          final p = catalog[i];
-                          return FadeSlideIn(
-                            delay: Duration(milliseconds: 60 * i),
-                            child: Container(
-                              decoration: BoxDecoration(
+                child: RefreshIndicator(
+                  color: AppTheme.accent,
+                  onRefresh: _refresh,
+                  child: catalog.isEmpty
+                      ? ListView(
+                          children: [
+                            SizedBox(height: MediaQuery.of(context).size.height * 0.12),
+                            _emptyState(context),
+                          ],
+                        )
+                      : ListView.separated(
+                          itemCount: catalog.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: 12),
+                          itemBuilder: (context, i) {
+                            final p = catalog[i];
+                            return FadeSlideIn(
+                              delay: Duration(milliseconds: 60 * i),
+                              child: Material(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: AppTheme.ink.withValues(alpha: 0.06)),
-                              ),
-                              padding: const EdgeInsets.all(10),
-                              child: Row(
-                                children: [
-                                  SizedBox(
-                                    width: 56,
-                                    height: 56,
-                                    child: SafeImage(
-                                      file: p.image,
-                                      url: p.imageUrl,
-                                      borderRadius: BorderRadius.circular(12),
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(16),
+                                  onTap: () => Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (_) => ProductDetailScreen(product: p)),
+                                  ),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(color: AppTheme.ink.withValues(alpha: 0.06)),
+                                    ),
+                                    padding: const EdgeInsets.all(10),
+                                    child: Row(
+                                      children: [
+                                        SizedBox(
+                                          width: 56,
+                                          height: 56,
+                                          child: SafeImage(
+                                            file: p.image,
+                                            url: p.imageUrl,
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 14),
+                                        Expanded(
+                                          child: Text(
+                                            p.descriptionEn,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: Theme.of(context).textTheme.bodyLarge,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          '₹${p.price.toInt()}',
+                                          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Icon(Icons.chevron_right, color: AppTheme.ink.withValues(alpha: 0.3)),
+                                      ],
                                     ),
                                   ),
-                                  const SizedBox(width: 14),
-                                  Expanded(
-                                    child: Text(
-                                      p.descriptionEn,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(context).textTheme.bodyLarge,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    '₹${p.price.toInt()}',
-                                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
-                                  ),
-                                ],
+                                ),
                               ),
-                            ),
-                          );
-                        },
-                      ),
+                            );
+                          },
+                        ),
+                ),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _emptyState(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          width: 72,
+          height: 72,
+          decoration: BoxDecoration(color: AppTheme.accent.withValues(alpha: 0.08), shape: BoxShape.circle),
+          child: Icon(Icons.inventory_2_outlined, size: 32, color: AppTheme.accent.withValues(alpha: 0.6)),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          'अभी कोई सामान नहीं\nNo products yet',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+      ],
     );
   }
 }
