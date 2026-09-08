@@ -72,9 +72,12 @@ class _CatalogScreenState extends State<CatalogScreen> {
                       borderRadius: BorderRadius.circular(18),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(18),
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => ProductDetailScreen(product: p)),
-                        ),
+                        onTap: () async {
+                          await Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => ProductDetailScreen(product: p)),
+                          );
+                          if (mounted) setState(() {});
+                        },
                         child: Container(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(18),

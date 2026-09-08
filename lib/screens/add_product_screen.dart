@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/product.dart';
+import '../services/api_service.dart';
 import '../theme.dart';
 import '../widgets/safe_image.dart';
 import '../widgets/home_action.dart';
@@ -15,22 +16,39 @@ import 'processing_screen.dart';
 /// One PageView keeps the shared [ProductDraft] alive across steps
 /// without needing a state-management package.
 class AddProductScreen extends StatefulWidget {
-  const AddProductScreen({super.key});
+  final ProductDraft? initialDraft;
+  const AddProductScreen({super.key, this.initialDraft});
 
   @override
   State<AddProductScreen> createState() => _AddProductScreenState();
 }
 
 class _AddProductScreenState extends State<AddProductScreen> {
-  final _pageController = PageController();
-  final _draft = ProductDraft();
-  int _step = 0;
+  late final ProductDraft _draft = widget.initialDraft ?? ProductDraft();
+  late final _pageController = PageController(initialPage: _stepFor(_draft));
+  late int _step = _stepFor(_draft);
+
+  int _stepFor(ProductDraft d) {
+    if (d.photo != null && d.audioPath != null) return 2;
+    if (d.photo != null) return 1;
+    return 0;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Track this draft so leaving mid-flow (e.g. the Home button)
+    // doesn't lose it — Home offers to resume it next time.
+    ApiService.instance.saveDraft(_draft);
+  }
 
   void _next() {
+    ApiService.instance.saveDraft(_draft);
     if (_step < 2) {
       _pageController.nextPage(
           duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
     } else {
+      ApiService.instance.clearDraft();
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => ProcessingScreen(draft: _draft)),
       );
