@@ -68,3 +68,41 @@ class EnquiryResponse(BaseModel):
     responded_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+class NegotiationAnalysisResponse(BaseModel):
+    """Schema for AI evaluation of a buyer's enquiry."""
+    is_sustainable: bool = Field(..., description="True if the offer meets or exceeds the artisan's floor price/capacity")
+    evaluation_summary: str = Field(..., description="Short explanation of why the deal is good or bad")
+    proposed_counter_offers: list[str] = Field(..., description="List of 2-3 actionable counter offers to send to the buyer")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class FeasibilityRequest(BaseModel):
+    """Artisan's current production capacity inputs for feasibility check."""
+    current_inventory: int = Field(0, description="Units currently in stock", ge=0)
+    monthly_capacity: int = Field(100, description="Max units artisan can produce per month", ge=1)
+    num_workers: int = Field(1, description="Number of workers available", ge=1)
+    raw_material_availability_pct: float = Field(100.0, description="% of raw material available (0-100)", ge=0, le=100)
+
+
+class FeasibilityBreakdown(BaseModel):
+    """Step-by-step production breakdown."""
+    required_units: int
+    inventory_available: int
+    units_to_produce: int
+    production_rate_per_day: float
+    estimated_days: float
+    raw_material_adjusted_rate: float
+    can_fulfill: bool
+
+
+class FeasibilityResponse(BaseModel):
+    """AI Order Feasibility Engine full report."""
+    can_fulfill_on_time: bool
+    status_emoji: str  # ✅ or ❌
+    status_label: str
+    summary: str
+    breakdown: FeasibilityBreakdown
+    recommended_response: str
+    split_delivery_suggestion: Optional[str] = None

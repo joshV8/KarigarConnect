@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import '../language.dart';
+import '../services/api_service.dart';
 import '../theme.dart';
 import '../widgets/brand_mark.dart';
 import '../widgets/decorative_background.dart';
 import '../widgets/fade_slide_in.dart';
-import 'login_screen.dart';
+import 'home_screen.dart';
+import 'buyer_home_screen.dart';
 
-/// Screen where users explicitly choose whether they are an Artisan (Seller) or a Wholesale Buyer.
+/// Screen shown AFTER OTP login. User chooses whether they are an Artisan (Seller)
+/// or a Wholesale Buyer, then gets routed to the appropriate dashboard.
 class RoleSelectScreen extends StatefulWidget {
-  const RoleSelectScreen({super.key});
+  final String phone;
+  const RoleSelectScreen({super.key, this.phone = ''});
 
   @override
   State<RoleSelectScreen> createState() => _RoleSelectScreenState();
@@ -16,6 +20,26 @@ class RoleSelectScreen extends StatefulWidget {
 
 class _RoleSelectScreenState extends State<RoleSelectScreen> {
   String _selectedRole = 'seller'; // 'seller' or 'buyer'
+
+  void _proceed() {
+    // Set the auth token with role prefix
+    final phone = widget.phone.isNotEmpty
+        ? widget.phone.replaceAll(RegExp(r'\D'), '')
+        : 'demo';
+    final prefix = _selectedRole == 'buyer' ? 'buyer_' : 'artisan_';
+    ApiService.instance.setAuthToken('$prefix$phone');
+    ApiService.instance.setUserRole(_selectedRole);
+
+    if (_selectedRole == 'buyer') {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const BuyerHomeScreen()),
+      );
+    } else {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,13 +99,7 @@ class _RoleSelectScreenState extends State<RoleSelectScreen> {
                   ),
                 ),
                 ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => LoginScreen(userRole: _selectedRole),
-                      ),
-                    );
-                  },
+                  onPressed: _proceed,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 18),
                     backgroundColor: _selectedRole == 'seller' ? AppTheme.accent : const Color(0xFF1E3A8A),

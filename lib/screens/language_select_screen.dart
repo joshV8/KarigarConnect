@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import '../language.dart';
 import '../widgets/brand_mark.dart';
 import '../widgets/decorative_background.dart';
-import 'role_select_screen.dart';
+import 'login_screen.dart';
 
-/// First screen the user sees. Language choice happens before role selection.
+/// First screen the user sees. Language choice happens before login.
 class LanguageSelectScreen extends StatelessWidget {
   const LanguageSelectScreen({super.key});
 
   void _choose(BuildContext context, String lang) {
     AppLanguage.instance.setLanguage(lang);
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const RoleSelectScreen()),
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
     );
   }
 

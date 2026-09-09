@@ -120,7 +120,7 @@ class ApiService {
   }
 
   Future<Product> _realProcessNewProduct(ProductDraft draft) async {
-    const baseUrl = AppConfig.apiBaseUrl;
+    final baseUrl = AppConfig.apiBaseUrl;
 
     // 1. Create Product
     final createUri = Uri.parse('$baseUrl/products');
@@ -594,9 +594,78 @@ class ApiService {
     }
   }
 
+  Future<NegotiationAnalysis> analyzeEnquiry(int enquiryId) async {
+    if (AppConfig.useMockApi) {
+      await Future.delayed(const Duration(seconds: 2));
+      return NegotiationAnalysis(
+        isSustainable: false,
+        evaluationSummary: 'The buyer is offering below your sustainable floor price (with 15% margin). This offer would result in a loss or negligible profit.',
+        proposedCounterOffers: [
+          'Counter-offer: ₹760/unit for 150 units',
+          'Accept ₹700 if buyer increases delivery time to 30 days.'
+        ],
+      );
+    }
+
+    final uri = Uri.parse('${AppConfig.apiBaseUrl}/enquiries/$enquiryId/analyze');
+    final resp = await http.post(uri, headers: _headers);
+
+    if (resp.statusCode == 200) {
+      return NegotiationAnalysis.fromJson(jsonDecode(resp.body) as Map<String, dynamic>);
+    } else {
+      throw Exception('Failed to analyze enquiry: ${resp.statusCode} ${resp.body}');
+    }
+  }
+
+  Future<FeasibilityReport> checkFeasibility({
+    required int enquiryId,
+    required int currentInventory,
+    required int monthlyCapacity,
+    required int numWorkers,
+    required double rawMaterialPct,
+  }) async {
+    if (AppConfig.useMockApi) {
+      await Future.delayed(const Duration(seconds: 2));
+      // Mock: 500 units in 15 days — artisan can only do ~133 units
+      return FeasibilityReport(
+        canFulfillOnTime: false,
+        statusEmoji: '❌',
+        statusLabel: 'Cannot Fulfill on Time',
+        summary: 'You cannot deliver 500 units in 15 days. With $currentInventory units in stock and a rate of ~${(monthlyCapacity * numWorkers * (rawMaterialPct / 100) / 30).toStringAsFixed(1)} units/day, full production would take ~32 days.',
+        breakdown: FeasibilityBreakdown(
+          requiredUnits: 500,
+          inventoryAvailable: currentInventory,
+          unitsToProduce: 500 - currentInventory,
+          productionRatePerDay: monthlyCapacity * numWorkers * (rawMaterialPct / 100) / 30,
+          estimatedDays: 32.0,
+          rawMaterialAdjustedRate: monthlyCapacity * numWorkers * (rawMaterialPct / 100),
+          canFulfill: false,
+        ),
+        recommendedResponse: 'We can deliver ${currentInventory + (monthlyCapacity * numWorkers * (rawMaterialPct / 100) / 30 * 15).round()} units in 15 days and the remaining units in 17 additional days. Please confirm if this split delivery works for you.',
+        splitDeliverySuggestion: 'Deliver ${currentInventory + (monthlyCapacity * numWorkers * (rawMaterialPct / 100) / 30 * 15).round()} units in 15 days + remaining in 17 more days',
+      );
+    }
+
+    final uri = Uri.parse('${AppConfig.apiBaseUrl}/enquiries/$enquiryId/feasibility');
+    final body = jsonEncode({
+      'current_inventory': currentInventory,
+      'monthly_capacity': monthlyCapacity,
+      'num_workers': numWorkers,
+      'raw_material_availability_pct': rawMaterialPct,
+    });
+
+    final resp = await http.post(uri, headers: _headers, body: body);
+    if (resp.statusCode == 200) {
+      return FeasibilityReport.fromJson(jsonDecode(resp.body) as Map<String, dynamic>);
+    } else {
+      throw Exception('Feasibility check failed: ${resp.statusCode} ${resp.body}');
+    }
+  }
+
   // =========================================================================
   // Digital Catalogs & Collections
   // =========================================================================
+
 
   Future<List<CatalogModel>> fetchCatalogs() async {
     if (AppConfig.useMockApi) {

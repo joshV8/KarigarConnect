@@ -12,6 +12,8 @@ import 'enquiries_screen.dart';
 import 'marketplace_screen.dart';
 import 'notifications_screen.dart';
 import 'product_detail_screen.dart';
+import 'role_select_screen.dart';
+import 'language_select_screen.dart';
 
 /// Main Dashboard screen with tab navigation and access to all Artisan capabilities:
 /// 1. My Shop & Add Product
@@ -133,6 +135,44 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
+            ],
+          ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert_rounded),
+            onSelected: (val) {
+              if (val == 'switch_role') {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const RoleSelectScreen()),
+                  (route) => false,
+                );
+              } else if (val == 'logout') {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const LanguageSelectScreen()),
+                  (route) => false,
+                );
+              }
+            },
+            itemBuilder: (ctx) => [
+              PopupMenuItem(
+                value: 'switch_role',
+                child: Row(
+                  children: [
+                    const Icon(Icons.swap_horiz_rounded, size: 20),
+                    const SizedBox(width: 10),
+                    Text(S.isHindi ? 'भूमिका बदलें' : 'Switch Role'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'logout',
+                child: Row(
+                  children: [
+                    const Icon(Icons.logout_rounded, size: 20),
+                    const SizedBox(width: 10),
+                    Text(S.isHindi ? 'लॉगआउट' : 'Logout'),
+                  ],
+                ),
+              ),
             ],
           ),
         ],

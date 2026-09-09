@@ -135,6 +135,62 @@ class AIService:
             processed_image_url=None,  # Person 2 will supply this when ready
         )
 
+    async def analyze_negotiation(
+        self, enquiry_message: str, material_cost: float, labour_cost: float
+    ) -> dict:
+        """Evaluate a buyer's offer against the artisan's floor price and capacity."""
+        if self.mode == "mock":
+            logger.info("[MOCK_AI] Simulating negotiation analysis...")
+            # Calculate sustainable floor (cost + 15% margin)
+            floor_price = (material_cost + labour_cost) * 1.15
+            
+            # Simple mock evaluation
+            if "650" in enquiry_message:
+                return {
+                    "is_sustainable": False,
+                    "evaluation_summary": f"The buyer is offering ₹650, but your sustainable floor price (with 15% margin) is ₹{floor_price:.0f}. This offer would result in a loss or negligible profit.",
+                    "proposed_counter_offers": [
+                        f"Counter-offer: ₹{floor_price + 20:.0f}/unit for 150 units",
+                        "Accept ₹700 if buyer increases delivery time to 30 days."
+                    ]
+                }
+            else:
+                return {
+                    "is_sustainable": True,
+                    "evaluation_summary": f"The buyer's offer looks reasonable and is above your sustainable floor price of ₹{floor_price:.0f}.",
+                    "proposed_counter_offers": [
+                        "Accept the offer as is.",
+                        "Counter-offer: Accept, but request 50% advance payment."
+                    ]
+                }
+                
+        # Remote AI Mode (Forward to AI Microservice)
+        target_url = f"{self.service_url}/negotiate"
+        logger.info(f"[REMOTE_AI] Forwarding negotiation analysis to {target_url}")
+        
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                response = await client.post(
+                    target_url,
+                    json={
+                        "enquiry_message": enquiry_message,
+                        "material_cost": material_cost,
+                        "labour_cost": labour_cost
+                    },
+                )
+                response.raise_for_status()
+                return response.json()
+        except Exception as exc:
+            logger.error(f"Failed to communicate with AI service for negotiation: {exc}")
+            # Fallback mock logic if remote fails
+            floor_price = (material_cost + labour_cost) * 1.15
+            return {
+                "is_sustainable": False,
+                "evaluation_summary": f"The buyer's offer needs review. Your sustainable floor price is ₹{floor_price:.0f}.",
+                "proposed_counter_offers": [
+                    f"Counter-offer: ₹{floor_price + 20:.0f}/unit",
+                ]
+            }
 
 # Global singleton instance
 ai_service = AIService()

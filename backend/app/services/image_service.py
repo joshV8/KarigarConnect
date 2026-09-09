@@ -31,21 +31,27 @@ DEV_UPLOADS_DIR = os.path.abspath(
 
 def validate_image_file(file: UploadFile) -> str:
     """Validate image MIME content-type and filename extension."""
-    filename = file.filename or ""
+    filename = file.filename or "image.jpg"
     ext = os.path.splitext(filename)[1].lower()
+    content_type = (file.content_type or "").lower()
+
+    if not ext:
+        if "png" in content_type:
+            ext = ".png"
+        elif "webp" in content_type:
+            ext = ".webp"
+        else:
+            ext = ".jpg"
 
     if ext not in ALLOWED_EXTENSIONS:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Unsupported file extension '{ext}'. Allowed: {', '.join(sorted(ALLOWED_EXTENSIONS))}",
-        )
-
-    content_type = (file.content_type or "").lower()
-    if content_type not in ALLOWED_MIME_TYPES:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Unsupported file MIME type '{content_type}'. Allowed: {', '.join(sorted(ALLOWED_MIME_TYPES))}",
-        )
+        # Fallback to .jpg if valid image mime
+        if any(m in content_type for m in ["image/", "octet-stream"]):
+            ext = ".jpg"
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Unsupported file extension '{ext}'. Allowed: {', '.join(sorted(ALLOWED_EXTENSIONS))}",
+            )
 
     return ext
 

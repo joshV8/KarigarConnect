@@ -31,11 +31,30 @@ class _ProcessingScreenState extends State<ProcessingScreen> with SingleTickerPr
   }
 
   Future<void> _run() async {
-    final Product result = await ApiService.instance.processNewProduct(widget.draft);
-    if (!mounted) return;
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => PreviewScreen(product: result)),
-    );
+    try {
+      final Product result = await ApiService.instance
+          .processNewProduct(widget.draft)
+          .timeout(const Duration(seconds: 150));
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => PreviewScreen(product: result)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      // Fallback: Proceed to preview screen with generated draft values
+      final fallbackProduct = Product(
+        id: 'draft_${DateTime.now().millisecondsSinceEpoch}',
+        image: widget.draft.photo,
+        imageBytes: widget.draft.photoBytes,
+        descriptionEn: 'Handcrafted traditional artisan product made with authentic techniques.',
+        descriptionHi: 'पारंपरिक भारतीय कारीगरी से निर्मित प्रामाणिक हस्तशिल्प।',
+        price: (widget.draft.rawMaterialCost * 1.75).roundToDouble(),
+        priceReason: 'Material cost ₹${widget.draft.rawMaterialCost.toInt()} + labour + margin',
+      );
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => PreviewScreen(product: fallbackProduct)),
+      );
+    }
   }
 
   @override

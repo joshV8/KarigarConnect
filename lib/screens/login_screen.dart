@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 import '../language.dart';
 import '../services/api_service.dart';
 import '../widgets/decorative_background.dart';
-import 'home_screen.dart';
-import 'buyer_home_screen.dart';
+import 'role_select_screen.dart';
 
-/// Phone + OTP login with dynamic role routing for Sellers and Buyers.
+/// Phone + OTP login. After verification, navigates to Role Selection.
 class LoginScreen extends StatefulWidget {
-  final String userRole;
-  const LoginScreen({super.key, this.userRole = 'seller'});
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -16,18 +14,15 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _phoneController = TextEditingController();
-  final _companyController = TextEditingController();
   final _otpController = TextEditingController();
   bool _otpSent = false;
-
-  bool get isBuyer => widget.userRole == 'buyer';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          isBuyer ? S.get('role_buyer_title') : S.get('role_seller_title'),
+          S.get('login_title'),
           style: const TextStyle(fontSize: 16),
         ),
       ),
@@ -45,26 +40,15 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  isBuyer
-                      ? (S.isHindi ? 'थोक खरीदार पोर्टल में आपका स्वागत है' : 'Welcome to Wholesale Buyer Portal')
-                      : (S.isHindi ? 'कारीगर विक्रय पोर्टल में आपका स्वागत है' : 'Welcome to Artisan Seller Portal'),
+                  S.isHindi
+                      ? 'कारीगर कनेक्ट में आपका स्वागत है'
+                      : 'Welcome to KarigarConnect',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Colors.black54,
                       ),
                 ),
                 const SizedBox(height: 28),
                 if (!_otpSent) ...[
-                  if (isBuyer) ...[
-                    TextField(
-                      controller: _companyController,
-                      style: const TextStyle(fontSize: 16),
-                      decoration: InputDecoration(
-                        prefixIcon: const Icon(Icons.business_outlined),
-                        hintText: S.get('buyer_company_hint'),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
                   TextField(
                     controller: _phoneController,
                     keyboardType: TextInputType.phone,
@@ -79,7 +63,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: () => setState(() => _otpSent = true),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: isBuyer ? const Color(0xFF1E3A8A) : null,
                     ),
                     child: Text(S.get('send_otp')),
                   ),
@@ -95,31 +78,21 @@ class _LoginScreenState extends State<LoginScreen> {
                   ElevatedButton(
                     onPressed: () {
                       final phone = _phoneController.text.trim();
-                      final prefix = isBuyer ? 'buyer_' : 'artisan_';
                       final token = phone.isNotEmpty
-                          ? '$prefix${phone.replaceAll(RegExp(r'\D'), '')}'
-                          : '${prefix}demo_user';
+                          ? 'user_${phone.replaceAll(RegExp(r'\D'), '')}'
+                          : 'user_demo';
 
                       ApiService.instance.setAuthToken(token);
-                      ApiService.instance.setUserRole(widget.userRole);
 
-                      if (isBuyer && _companyController.text.trim().isNotEmpty) {
-                        ApiService.instance.setBuyerCompany(_companyController.text.trim());
-                      }
-
-                      if (isBuyer) {
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(builder: (_) => const BuyerHomeScreen()),
-                        );
-                      } else {
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(builder: (_) => const HomeScreen()),
-                        );
-                      }
+                      // Navigate to Role Selection after OTP verification
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (_) => RoleSelectScreen(phone: phone),
+                        ),
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: isBuyer ? const Color(0xFF1E3A8A) : null,
                     ),
                     child: Text(S.get('verify')),
                   ),

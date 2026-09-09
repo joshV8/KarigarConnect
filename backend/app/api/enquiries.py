@@ -1,5 +1,5 @@
 from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Body
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 
@@ -7,7 +7,7 @@ from app.database import get_db
 from app.models.user import User
 from app.models.enquiry import Enquiry
 from app.models.product import Product
-from app.schemas.enquiry import EnquiryResponse, EnquiryUpdate
+from app.schemas.enquiry import EnquiryResponse, EnquiryUpdate, FeasibilityRequest
 from app.api.dependencies import get_current_user
 
 router = APIRouter(
@@ -120,3 +120,66 @@ def update_enquiry(
     db.commit()
     db.refresh(enquiry)
     return _build_enquiry_response(enquiry)
+
+
+@router.post(
+    "/{enquiry_id}/analyze",
+    summary="Analyze a B2B buyer offer using AI",
+)
+async def analyze_enquiry_offer(
+    enquiry_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Evaluates the buyer's enquiry (offer price, quantity, lead time) against the artisan's floor price 
+    (material + labour costs) and production capacity. Returns a summary and suggested counter-offers.
+    """
+    enquiry = _get_user_enquiry_or_404(enquiry_id, current_user.id, db)
+    
+    from app.services.ai_service import ai_service
+    
+    analysis = await ai_service.analyze_negotiation(
+        enquiry_message=enquiry.message,
+        material_cost=enquiry.product.raw_material_cost,
+        labour_cost=enquiry.product.labour_cost,
+    )
+    return analysis
+
+
+@router.post(
+    "/{enquiry_id}/feasibility",
+    summary="AI Order Feasibility Engine — checks if the artisan can fulfill a B2B order",
+)
+async def check_order_feasibility(
+    enquiry_id: int,
+    payload: FeasibilityRequest = Body(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Evaluates whether the artisan can fulfill the buyer's order quantity within the
+    requested deadline given:
+      - Current inventory
+      - Monthly production capacity
+      - Number of workers
+      - Raw material availability %
+
+    Returns a full feasibility report with a breakdown table and a ready-to-send
+    recommended response (optionally polished by Gemini AI).
+    """
+    enquiry = _get_user_enquiry_or_404(enquiry_id, current_user.id, db)
+
+    from app.services.feasibility_service import calculate_feasibility_with_ai
+
+    product_name = enquiry.product.name if enquiry.product else "artisan product"
+
+    result = calculate_feasibility_with_ai(
+        enquiry_message=enquiry.message,
+        current_inventory=payload.current_inventory,
+        monthly_capacity=payload.monthly_capacity,
+        num_workers=payload.num_workers,
+        raw_material_availability_pct=payload.raw_material_availability_pct,
+        product_name=product_name,
+    )
+    return result
