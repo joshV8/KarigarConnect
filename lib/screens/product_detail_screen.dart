@@ -62,7 +62,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('रद्द करें · Cancel')),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('हटाएं · Delete', style: TextStyle(color: AppTheme.danger)),
+            child: const Text('हटाएं · Delete', style: TextStyle(color: AppTheme.danger)),
           ),
         ],
       ),

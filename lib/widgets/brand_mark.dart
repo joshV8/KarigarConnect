@@ -31,7 +31,7 @@ class BrandMark extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 14),
-        Text(
+        const Text(
           'KarigarConnect',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink, letterSpacing: 0.2),
         ),

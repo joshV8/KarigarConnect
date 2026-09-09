@@ -110,7 +110,7 @@ class _EnquiriesScreenState extends State<EnquiriesScreen> {
                         ),
                         if (enquiry.productName != null) ...[
                           const SizedBox(height: 4),
-                          Text(S.get('product_label') + ': ${enquiry.productName}', style: const TextStyle(fontSize: 13, color: AppTheme.accent)),
+                          Text('${S.get('product_label')}: ${enquiry.productName}', style: const TextStyle(fontSize: 13, color: AppTheme.accent)),
                         ],
                         const SizedBox(height: 8),
                         Text(S.get('message_prefix'), style: TextStyle(fontSize: 12, color: AppTheme.ink.withValues(alpha: 0.5))),
@@ -120,7 +120,7 @@ class _EnquiriesScreenState extends State<EnquiriesScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Text(S.get('update_status'), style: TextStyle(fontWeight: FontWeight.w600)),
+                  Text(S.get('update_status'), style: const TextStyle(fontWeight: FontWeight.w600)),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
@@ -142,7 +142,7 @@ class _EnquiriesScreenState extends State<EnquiriesScreen> {
                     }).toList(),
                   ),
                   const SizedBox(height: 16),
-                  Text(S.get('response_note'), style: TextStyle(fontWeight: FontWeight.w600)),
+                  Text(S.get('response_note'), style: const TextStyle(fontWeight: FontWeight.w600)),
                   const SizedBox(height: 8),
                   TextField(
                     controller: responseController,
@@ -259,7 +259,7 @@ class _EnquiriesScreenState extends State<EnquiriesScreen> {
                               if (enq.productName != null) ...[
                                 const SizedBox(height: 4),
                                 Text(
-                                  S.get('product_label') + ': ${enq.productName}',
+                                  '${S.get('product_label')}: ${enq.productName}',
                                   style: const TextStyle(fontSize: 13, color: AppTheme.accent, fontWeight: FontWeight.w500),
                                 ),
                               ],
@@ -280,7 +280,7 @@ class _EnquiriesScreenState extends State<EnquiriesScreen> {
                                       const SizedBox(width: 6),
                                       Expanded(
                                         child: Text(
-                                          S.get('your_reply') + ': "${enq.artisanResponse}"',
+                                          '${S.get('your_reply')}: "${enq.artisanResponse}"',
                                           style: const TextStyle(fontSize: 12, color: AppTheme.accent, fontWeight: FontWeight.w500),
                                         ),
                                       ),

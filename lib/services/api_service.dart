@@ -108,7 +108,7 @@ class ApiService {
   }
 
   Future<Product> _realProcessNewProduct(ProductDraft draft) async {
-    final baseUrl = AppConfig.apiBaseUrl;
+    const baseUrl = AppConfig.apiBaseUrl;
 
     // 1. Create Product
     final createUri = Uri.parse('$baseUrl/products');

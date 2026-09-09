@@ -86,7 +86,7 @@ class _ProcessingScreenState extends State<ProcessingScreen> with SingleTickerPr
                 ),
                 const SizedBox(height: 24),
                 Text(S.get('ai_preparing'),
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white),
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white),
                 ),
                 const SizedBox(height: 6),
                 Text(

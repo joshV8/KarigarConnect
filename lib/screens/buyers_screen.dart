@@ -112,7 +112,7 @@ class _BuyersScreenState extends State<BuyersScreen> {
                     style: TextStyle(fontSize: 13, color: AppTheme.ink.withValues(alpha: 0.6)),
                   ),
                   const SizedBox(height: 16),
-                  Text(S.get('select_product'), style: TextStyle(fontWeight: FontWeight.w600)),
+                  Text(S.get('select_product'), style: const TextStyle(fontWeight: FontWeight.w600)),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<Product>(
                     initialValue: selected,
@@ -137,7 +137,7 @@ class _BuyersScreenState extends State<BuyersScreen> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  Text(S.get('message_label'), style: TextStyle(fontWeight: FontWeight.w600)),
+                  Text(S.get('message_label'), style: const TextStyle(fontWeight: FontWeight.w600)),
                   const SizedBox(height: 8),
                   TextField(
                     controller: messageController,
@@ -163,7 +163,7 @@ class _BuyersScreenState extends State<BuyersScreen> {
                         messenger.showSnackBar(
                           SnackBar(
                             backgroundColor: AppTheme.success,
-                            content: Text(S.get('proposal_sent') + ' ${buyer.company}'),
+                            content: Text('${S.get('proposal_sent')} ${buyer.company}'),
                           ),
                         );
                       } catch (e) {
