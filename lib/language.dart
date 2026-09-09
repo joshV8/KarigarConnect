@@ -34,13 +34,26 @@ class S {
     // Language Select
     'choose_language': 'Choose your language',
 
+    // Role Select
+    'role_select_title': 'Choose Your Role',
+    'role_select_subtitle': 'Are you an artisan seller or a wholesale buyer?',
+    'role_seller_title': 'Artisan / Seller (कारीगर)',
+    'role_seller_desc': 'Digitize crafts with AI, create catalogs, and sell wholesale to verified buyers.',
+    'role_buyer_title': 'Wholesale Buyer / Retailer (खरीदार)',
+    'role_buyer_desc': 'Discover authentic regional crafts, connect directly with artisans, and place bulk orders.',
+    'continue_as_seller': 'Continue as Artisan',
+    'continue_as_buyer': 'Continue as Buyer',
+
     // Login
     'login_title': 'Log in',
     'phone_hint': 'Phone number',
+    'buyer_company_hint': 'Company / Business Name',
+    'buyer_name_hint': 'Your Full Name',
+    'buyer_category_hint': 'Interested Craft Category',
     'send_otp': 'Send OTP',
-    'verify': 'Verify',
+    'verify': 'Verify & Enter',
 
-    // Home / Nav
+    // Home / Nav (Seller)
     'app_title': 'KarigarConnect',
     'catalog_tooltip': 'Catalog',
     'notifications_tooltip': 'Notifications',
@@ -57,6 +70,29 @@ class S {
     'view_all': 'View all',
     'no_products': 'No products added yet',
     'find_buyers': 'Find Buyers',
+
+    // Buyer Dashboard & Nav
+    'buyer_app_title': 'KarigarConnect · Wholesale Buyer',
+    'buyer_nav_discover': 'Discover',
+    'buyer_nav_collections': 'Collections',
+    'buyer_nav_orders': 'My Enquiries',
+    'buyer_nav_artisans': 'Artisans',
+    'search_crafts_hint': 'Search handlooms, brass, pottery, bamboo...',
+    'filter_all': 'All',
+    'direct_from_artisan': 'Direct from Verified Artisans',
+    'inquire_wholesale': 'Send Bulk Enquiry',
+    'inquire_dialog_title': 'Send Wholesale Purchase Enquiry',
+    'quantity_needed': 'Quantity Required (Units)',
+    'target_price': 'Target Price per unit (₹, Optional)',
+    'enquiry_notes': 'Requirements, timeline, custom specifications...',
+    'submit_enquiry': 'Submit Purchase Enquiry',
+    'enquiry_sent_success': 'Purchase enquiry sent directly to the artisan!',
+    'no_buyer_enquiries': 'You have not submitted any wholesale enquiries yet.',
+    'status_pending_buyer': 'Waiting for Artisan Response',
+    'status_accepted_buyer': 'Artisan Accepted Deal 🎉',
+    'status_contacted_buyer': 'Artisan Contacted You',
+    'status_rejected_buyer': 'Declined by Artisan',
+    'view_artisan_catalog': 'View Full Collection',
 
     // Add Product
     'add_product_title': 'Add product',
@@ -107,7 +143,7 @@ class S {
     'create_collection': 'Create First Collection',
     'items_included': 'items included',
 
-    // Buyers
+    // Buyers (Seller perspective)
     'buyers_title': 'Wholesale Buyers',
     'verified_buyers': 'Verified B2B Buyers',
     'all_categories': 'All Categories',
@@ -119,7 +155,7 @@ class S {
     'proposal_sent': 'Proposal sent to buyer!',
     'no_buyers': 'No wholesale buyers found for this category',
 
-    // Deals / Enquiries
+    // Deals / Enquiries (Seller perspective)
     'deals_title': 'Wholesale Deals',
     'deal_status_pending': 'Pending',
     'deal_status_contacted': 'Contacted',
@@ -150,13 +186,26 @@ class S {
     // Language Select
     'choose_language': 'अपनी भाषा चुनें',
 
+    // Role Select
+    'role_select_title': 'अपनी भूमिका चुनें',
+    'role_select_subtitle': 'आप कारीगर/विक्रेता हैं या थोक खरीदार?',
+    'role_seller_title': 'कारीगर / विक्रेता (Artisan)',
+    'role_seller_desc': 'AI से अपने शिल्प का कैटलॉग बनाएं, उचित मूल्य पाएं, और थोक खरीदारों को बेचें।',
+    'role_buyer_title': 'थोक खरीदार / व्यापारी (Buyer)',
+    'role_buyer_desc': 'भारत के प्रामाणिक शिल्प खोजें, सीधे कारीगरों से जुड़ें और थोक ऑर्डर दें।',
+    'continue_as_seller': 'कारीगर के रूप में आगे बढ़ें',
+    'continue_as_buyer': 'खरीदार के रूप में आगे बढ़ें',
+
     // Login
     'login_title': 'लॉगिन करें',
     'phone_hint': 'फ़ोन नंबर दर्ज करें',
+    'buyer_company_hint': 'कंपनी / व्यापार का नाम',
+    'buyer_name_hint': 'आपका पूरा नाम',
+    'buyer_category_hint': 'रुचि की शिल्प श्रेणी',
     'send_otp': 'OTP भेजें',
-    'verify': 'सत्यापित करें',
+    'verify': 'सत्यापित करें व प्रवेश करें',
 
-    // Home / Nav
+    // Home / Nav (Seller)
     'app_title': 'कारीगर कनेक्ट',
     'catalog_tooltip': 'कैटलॉग',
     'notifications_tooltip': 'सूचनाएं',
@@ -173,6 +222,29 @@ class S {
     'view_all': 'सभी देखें',
     'no_products': 'अभी कोई सामान नहीं जोड़ा गया',
     'find_buyers': 'खरीदार खोजें',
+
+    // Buyer Dashboard & Nav
+    'buyer_app_title': 'कारीगर कनेक्ट · थोक खरीदार मंच',
+    'buyer_nav_discover': 'खोजें',
+    'buyer_nav_collections': 'संग्रह',
+    'buyer_nav_orders': 'मेरी पूछताछ',
+    'buyer_nav_artisans': 'कारीगर',
+    'search_crafts_hint': 'हथकरघा, पीतल, मिट्टी के बर्तन, बांस खोजें...',
+    'filter_all': 'सभी',
+    'direct_from_artisan': 'सत्यापित कारीगरों से सीधे',
+    'inquire_wholesale': 'थोक पूछताछ भेजें',
+    'inquire_dialog_title': 'थोक खरीद पूछताछ भेजें',
+    'quantity_needed': 'आवश्यक मात्रा (इकाइयाँ)',
+    'target_price': 'लक्षित मूल्य प्रति इकाई (₹, वैकल्पिक)',
+    'enquiry_notes': 'ज़रूरतें, डिलीवरी समय, विशेष विवरण...',
+    'submit_enquiry': 'खरीद पूछताछ भेजें',
+    'enquiry_sent_success': 'खरीद पूछताछ सीधे कारीगर को भेज दी गई!',
+    'no_buyer_enquiries': 'आपने अभी तक कोई थोक पूछताछ नहीं भेजी है।',
+    'status_pending_buyer': 'कारीगर के जवाब की प्रतीक्षा है',
+    'status_accepted_buyer': 'कारीगर ने सौदा स्वीकार कर लिया 🎉',
+    'status_contacted_buyer': 'कारीगर ने आपसे संपर्क किया',
+    'status_rejected_buyer': 'कारीगर द्वारा अस्वीकार',
+    'view_artisan_catalog': 'पूरा संग्रह देखें',
 
     // Add Product
     'add_product_title': 'नया सामान जोड़ें',

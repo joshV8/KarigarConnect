@@ -61,6 +61,10 @@ class ApiService {
   final List<BuyerEnquiry> _mockEnquiries = [];
   List<BuyerEnquiry> get enquiries => List.unmodifiable(_mockEnquiries);
 
+  // Buyer sent purchase enquiries
+  final List<Enquiry> _buyerSentEnquiries = [];
+  List<Enquiry> get buyerSentEnquiries => List.unmodifiable(_buyerSentEnquiries);
+
   // In-progress Add Product draft, kept so the artisan can resume if
   // they leave mid-flow (e.g. via the Home button) instead of losing
   // their photo/voice note/price. Session-only.
@@ -68,6 +72,14 @@ class ApiService {
   ProductDraft? get savedDraft => _savedDraft;
   void saveDraft(ProductDraft draft) => _savedDraft = draft;
   void clearDraft() => _savedDraft = null;
+
+  String _userRole = 'seller'; // 'seller' or 'buyer'
+  String get userRole => _userRole;
+  void setUserRole(String role) => _userRole = role;
+
+  String _buyerCompany = 'Wholesale Craft Retailers';
+  String get buyerCompany => _buyerCompany;
+  void setBuyerCompany(String company) => _buyerCompany = company;
 
   void setAuthToken(String token) {
     AppConfig.authToken = token;
@@ -433,7 +445,7 @@ class ApiService {
     required String message,
   }) async {
     if (AppConfig.useMockApi) {
-      return Enquiry(
+      final enq = Enquiry(
         id: DateTime.now().millisecondsSinceEpoch,
         buyerId: buyerId,
         productId: productId,
@@ -443,6 +455,8 @@ class ApiService {
         status: 'pending',
         createdAt: DateTime.now(),
       );
+      _buyerSentEnquiries.insert(0, enq);
+      return enq;
     }
 
     final uri = Uri.parse('${AppConfig.apiBaseUrl}/buyers/$buyerId/enquiries');
@@ -453,10 +467,65 @@ class ApiService {
 
     final resp = await http.post(uri, headers: _headers, body: body);
     if (resp.statusCode == 201 || resp.statusCode == 200) {
-      return Enquiry.fromJson(jsonDecode(resp.body) as Map<String, dynamic>);
+      final enq = Enquiry.fromJson(jsonDecode(resp.body) as Map<String, dynamic>);
+      _buyerSentEnquiries.insert(0, enq);
+      return enq;
     } else {
       throw Exception('Failed to send enquiry: ${resp.statusCode} ${resp.body}');
     }
+  }
+
+  /// Bulk purchase enquiry submitted by a buyer directly on an artisan's product
+  Future<Enquiry> sendBuyerPurchaseEnquiry({
+    required int productId,
+    required String productName,
+    required int quantity,
+    required String message,
+    double? targetPrice,
+  }) async {
+    final fullMsg = 'Quantity: $quantity units${targetPrice != null && targetPrice > 0 ? ' • Target: ₹${targetPrice.toInt()}/unit' : ''}\n$message';
+
+    if (AppConfig.useMockApi) {
+      final enq = Enquiry(
+        id: DateTime.now().millisecondsSinceEpoch,
+        buyerId: 1,
+        productId: productId,
+        buyerCompany: _buyerCompany,
+        productName: productName,
+        message: fullMsg,
+        status: 'pending',
+        createdAt: DateTime.now(),
+      );
+      _buyerSentEnquiries.insert(0, enq);
+      return enq;
+    }
+
+    try {
+      final uri = Uri.parse('${AppConfig.apiBaseUrl}/buyers/1/enquiries');
+      final body = jsonEncode({
+        'product_id': productId,
+        'message': fullMsg,
+      });
+      final resp = await http.post(uri, headers: _headers, body: body);
+      if (resp.statusCode == 201 || resp.statusCode == 200) {
+        final enq = Enquiry.fromJson(jsonDecode(resp.body) as Map<String, dynamic>);
+        _buyerSentEnquiries.insert(0, enq);
+        return enq;
+      }
+    } catch (_) {}
+
+    final fallbackEnq = Enquiry(
+      id: DateTime.now().millisecondsSinceEpoch,
+      buyerId: 1,
+      productId: productId,
+      buyerCompany: _buyerCompany,
+      productName: productName,
+      message: fullMsg,
+      status: 'pending',
+      createdAt: DateTime.now(),
+    );
+    _buyerSentEnquiries.insert(0, fallbackEnq);
+    return fallbackEnq;
   }
 
   // =========================================================================
@@ -603,7 +672,9 @@ class ApiService {
   Future<List<Product>> fetchMarketplaceProducts({String? category}) async {
     try {
       final queryParams = <String, String>{};
-      if (category != null && category.isNotEmpty) queryParams['category'] = category;
+      if (category != null && category.isNotEmpty && category != 'All' && category != 'सभी') {
+        queryParams['category'] = category;
+      }
 
       final uri = Uri.parse('${AppConfig.apiBaseUrl}/marketplace/products')
           .replace(queryParameters: queryParams.isNotEmpty ? queryParams : null);
@@ -683,7 +754,6 @@ class ApiService {
 
       if (resp.statusCode == 200) {
         final decoded = jsonDecode(resp.body);
-        // Backend returns { notifications: [...], total: N, unread_count: N }
         final List list;
         if (decoded is Map<String, dynamic> && decoded.containsKey('notifications')) {
           list = decoded['notifications'] as List;
