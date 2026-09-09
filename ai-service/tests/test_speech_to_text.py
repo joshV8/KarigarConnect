@@ -397,7 +397,10 @@ class TestLiveWhisper:
     @pytest.fixture(scope="class")
     def whisper_model(self):
         import whisper
-        return whisper.load_model("base")
+        try:
+            return whisper.load_model("base")
+        except Exception as exc:
+            pytest.skip(f"Whisper model weights could not be downloaded/loaded: {exc}")
 
     @staticmethod
     def _is_ffmpeg_error(exc):

@@ -240,6 +240,10 @@ def transcribe_audio(
             "Run `pip install openai-whisper` (also needs ffmpeg on PATH)."
         ) from exc
 
+    # Fast check: minimum required byte length for valid audio container
+    if len(audio_bytes) < 32:
+        raise ValueError("Audio data is too small or invalid.")
+
     # Determine the audio format extension
     ext = _infer_audio_extension(audio_bytes, filename)
 
@@ -287,7 +291,7 @@ def transcribe_audio(
     except Exception as exc:
         err_msg = str(exc).lower()
         # Classify bad/corrupt audio as ValueError (400 Bad Request) rather than server crash (500)
-        if any(marker in err_msg for marker in ("failed to load audio", "invalid data found", "could not find codec", "error opening input")):
+        if any(marker in err_msg for marker in ("failed to load audio", "invalid data found", "could not find codec", "error opening input", "invalid", "corrupt", "eof", "header", "decode")):
             raise ValueError(f"Invalid or unsupported audio file: {exc}") from exc
         raise RuntimeError(f"Whisper transcription failed: {exc}") from exc
     finally:
