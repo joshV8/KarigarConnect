@@ -4,7 +4,8 @@ python-dotenv
 pydantic
 python-multipart>=0.0.9
 pillow
-rembg
+rembg[cpu]
+onnxruntime
 opencv-python
 numpy
 google-genai
