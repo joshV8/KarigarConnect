@@ -60,3 +60,27 @@ class ProductDraft {
     this.rawMaterialCost = 100,
   });
 }
+
+/// A message from a prospective buyer about a listed product. In the
+/// real app these come from Person 3's backend (see API_CONTRACT.md);
+/// for now ApiService generates believable mock ones so the Market
+/// Linkage requirement has a working UI to demo.
+class BuyerEnquiry {
+  final String id;
+  final String buyerName;
+  final String channel; // 'B2B Marketplace' | 'Government e-Marketplace' | 'Direct Buyer'
+  final String message;
+  final String productDescription;
+  final double productPrice;
+  final DateTime receivedAt;
+
+  BuyerEnquiry({
+    required this.id,
+    required this.buyerName,
+    required this.channel,
+    required this.message,
+    required this.productDescription,
+    required this.productPrice,
+    required this.receivedAt,
+  });
+}

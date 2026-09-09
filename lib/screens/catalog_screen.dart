@@ -1,5 +1,5 @@
-import '../language.dart';
 import 'package:flutter/material.dart';
+import '../language.dart';
 import '../models/catalog_model.dart';
 import '../models/product.dart';
 import '../services/api_service.dart';
@@ -7,6 +7,7 @@ import '../theme.dart';
 import '../widgets/safe_image.dart';
 import '../widgets/fade_slide_in.dart';
 import '../widgets/home_action.dart';
+import 'product_detail_screen.dart';
 
 /// Full catalog screen supporting both raw Products and curated digital Collections.
 class CatalogScreen extends StatefulWidget {
@@ -130,7 +131,7 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
           builder: (context, setDialogState) {
             return AlertDialog(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              title: Text(S.get('add_to_collection') + ' ${catalog.title}'),
+              title: Text('${S.get('add_to_collection')} ${catalog.title}'),
               content: DropdownButtonFormField<Product>(
                 initialValue: selected,
                 decoration: InputDecoration(
@@ -228,8 +229,8 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
           labelColor: AppTheme.ink,
           indicatorColor: AppTheme.accent,
           tabs: [
-            Tab(text: S.get('all_items') + ' (${catalog.length})'),
-            Tab(text: S.get('digital_collections') + ' (${_catalogs.length})'),
+            Tab(text: '${S.get('all_items')} (${catalog.length})'),
+            Tab(text: '${S.get('digital_collections')} (${_catalogs.length})'),
           ],
         ),
       ),
@@ -260,31 +261,43 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
                           final p = catalog[i];
                           return FadeSlideIn(
                             delay: Duration(milliseconds: 50 * i),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white,
+                            child: Material(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(18),
+                              child: InkWell(
                                 borderRadius: BorderRadius.circular(18),
-                                border: Border.all(color: AppTheme.ink.withValues(alpha: 0.06)),
-                              ),
-                              clipBehavior: Clip.antiAlias,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    child: SafeImage(
-                                      file: p.image,
-                                      bytes: p.imageBytes,
-                                      url: p.imageUrl,
-                                    ),
+                                onTap: () async {
+                                  await Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (_) => ProductDetailScreen(product: p)),
+                                  );
+                                  if (mounted) _load();
+                                },
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(18),
+                                    border: Border.all(color: AppTheme.ink.withValues(alpha: 0.06)),
                                   ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(12),
-                                    child: Text(
-                                      '₹${p.price.toInt()}',
-                                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
-                                    ),
+                                  clipBehavior: Clip.antiAlias,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                        child: SafeImage(
+                                          file: p.image,
+                                          bytes: p.imageBytes,
+                                          url: p.imageUrl,
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.all(12),
+                                        child: Text(
+                                          '₹${p.price.toInt()}',
+                                          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ],
+                                ),
                               ),
                             ),
                           );
@@ -367,7 +380,7 @@ class _CatalogScreenState extends State<CatalogScreen> with SingleTickerProvider
                                     ],
                                     const SizedBox(height: 10),
                                     Text(
-                                      '${cat.products.length} ' + S.get('items_included'),
+                                      '${cat.products.length} ${S.get('items_included')}',
                                       style: TextStyle(fontSize: 13, color: AppTheme.ink.withValues(alpha: 0.6)),
                                     ),
                                     const SizedBox(height: 14),

@@ -13,6 +13,8 @@ class AppConfig {
 
   /// FastAPI Backend base URL.
   /// Configurable via `--dart-define=API_BASE_URL=https://...` or defaults to local dev server.
+  /// - Android Emulator: 'http://10.0.2.2:8000'
+  /// - iOS Simulator / Flutter Web / Desktop: 'http://127.0.0.1:8000'
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
     defaultValue: 'http://127.0.0.1:8000',

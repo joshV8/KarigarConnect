@@ -1,10 +1,11 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 /// Displays a product photo from whichever source is available:
-/// 1. A remote [url] (Cloudinary / S3 / backend static storage)
+/// 1. A remote [url] (Cloudinary / S3 / backend static storage or base64 data URI)
 /// 2. Raw [bytes] (Uint8List — works everywhere including Web)
 /// 3. A local [file] (dart:io File on Mobile / Desktop)
 /// 4. Fallback to aesthetic placeholder
@@ -28,15 +29,32 @@ class SafeImage extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget child;
     if (url != null && url!.isNotEmpty) {
-      child = Image.network(
-        url!,
-        fit: fit,
-        width: double.infinity,
-        height: double.infinity,
-        loadingBuilder: (context, widget, progress) =>
-            progress == null ? widget : _placeholder(),
-        errorBuilder: (context, error, stack) => _placeholder(),
-      );
+      if (url!.startsWith('data:image')) {
+        try {
+          final commaIndex = url!.indexOf(',');
+          final base64String = commaIndex != -1 ? url!.substring(commaIndex + 1) : url!;
+          final decodedBytes = base64Decode(base64String);
+          child = Image.memory(
+            decodedBytes,
+            fit: fit,
+            width: double.infinity,
+            height: double.infinity,
+            errorBuilder: (context, error, stack) => _placeholder(),
+          );
+        } catch (_) {
+          child = _placeholder();
+        }
+      } else {
+        child = Image.network(
+          url!,
+          fit: fit,
+          width: double.infinity,
+          height: double.infinity,
+          loadingBuilder: (context, widget, progress) =>
+              progress == null ? widget : _placeholder(),
+          errorBuilder: (context, error, stack) => _placeholder(),
+        );
+      }
     } else if (bytes != null && bytes!.isNotEmpty) {
       child = AnimatedSwitcher(
         duration: const Duration(milliseconds: 250),

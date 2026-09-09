@@ -11,6 +11,7 @@ import 'buyers_screen.dart';
 import 'enquiries_screen.dart';
 import 'marketplace_screen.dart';
 import 'notifications_screen.dart';
+import 'product_detail_screen.dart';
 
 /// Main Dashboard screen with tab navigation and access to all Artisan capabilities:
 /// 1. My Shop & Add Product
@@ -42,6 +43,43 @@ class _HomeScreenState extends State<HomeScreen> {
         _unreadCount = unread;
       });
     }
+  }
+
+  Future<void> _startAddProduct() async {
+    final saved = ApiService.instance.savedDraft;
+    ProductDraft? draftToOpen;
+
+    if (saved != null) {
+      final choice = await showDialog<String>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(S.isHindi ? 'अधूरा काम मिला' : 'Unfinished draft found'),
+          content: Text(S.isHindi ? 'क्या आप पिछला अधूरा सामान जारी रखना चाहते हैं?' : 'Continue where you left off?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, 'new'),
+              child: Text(S.isHindi ? 'नया शुरू करें' : 'Start new'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, 'resume'),
+              child: Text(S.isHindi ? 'जारी रखें' : 'Resume'),
+            ),
+          ],
+        ),
+      );
+      if (choice == null) return;
+      if (choice == 'resume') {
+        draftToOpen = saved;
+      } else {
+        ApiService.instance.clearDraft();
+      }
+    }
+
+    if (!mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => AddProductScreen(initialDraft: draftToOpen)),
+    );
+    if (mounted) _load();
   }
 
   @override
@@ -117,24 +155,25 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: Colors.white,
         elevation: 8,
         indicatorColor: AppTheme.accentBg,
-        destinations: [NavigationDestination(
-            icon: Icon(Icons.storefront_outlined),
-            selectedIcon: Icon(Icons.storefront, color: AppTheme.accent),
+        destinations: [
+          NavigationDestination(
+            icon: const Icon(Icons.storefront_outlined),
+            selectedIcon: const Icon(Icons.storefront, color: AppTheme.accent),
             label: S.get('nav_shop'),
           ),
           NavigationDestination(
-            icon: Icon(Icons.people_alt_outlined),
-            selectedIcon: Icon(Icons.people_alt, color: AppTheme.accent),
+            icon: const Icon(Icons.people_alt_outlined),
+            selectedIcon: const Icon(Icons.people_alt, color: AppTheme.accent),
             label: S.get('nav_buyers'),
           ),
           NavigationDestination(
-            icon: Icon(Icons.handshake_outlined),
-            selectedIcon: Icon(Icons.handshake, color: AppTheme.accent),
+            icon: const Icon(Icons.handshake_outlined),
+            selectedIcon: const Icon(Icons.handshake, color: AppTheme.accent),
             label: S.get('nav_deals'),
           ),
           NavigationDestination(
-            icon: Icon(Icons.explore_outlined),
-            selectedIcon: Icon(Icons.explore, color: AppTheme.accent),
+            icon: const Icon(Icons.explore_outlined),
+            selectedIcon: const Icon(Icons.explore, color: AppTheme.accent),
             label: S.get('nav_market'),
           ),
         ],
@@ -162,12 +201,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 18),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
-                onPressed: () async {
-                  await Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const AddProductScreen()),
-                  );
-                  _load();
-                },
+                onPressed: _startAddProduct,
               ),
               const SizedBox(height: 20),
 
@@ -230,7 +264,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(S.get('my_products') + ' (${catalog.length})', style: Theme.of(context).textTheme.titleLarge),
+                  Text('${S.get('my_products')} (${catalog.length})', style: Theme.of(context).textTheme.titleLarge),
                   TextButton(
                     onPressed: () async {
                       await Navigator.of(context).push(
@@ -271,12 +305,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           delay: Duration(milliseconds: 50 * i),
                           child: InkWell(
                             borderRadius: BorderRadius.circular(16),
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => BuyersScreen(selectedProduct: p),
-                                ),
+                            onTap: () async {
+                              await Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => ProductDetailScreen(product: p)),
                               );
+                              if (mounted) _load();
                             },
                             child: Container(
                               decoration: BoxDecoration(

@@ -9,13 +9,65 @@ import '../models/enquiry.dart';
 import '../models/catalog_model.dart';
 import '../models/notification_item.dart';
 
+class BuyerEnquiry {
+  final String id;
+  final String buyerName;
+  final String channel;
+  final String message;
+  final String productDescription;
+  final double productPrice;
+  final DateTime receivedAt;
+
+  const BuyerEnquiry({
+    required this.id,
+    required this.buyerName,
+    required this.channel,
+    required this.message,
+    required this.productDescription,
+    required this.productPrice,
+    required this.receivedAt,
+  });
+}
+
 /// Single point of contact with the backend (FastAPI backend + AI pipeline).
 class ApiService {
-  ApiService._();
+  ApiService._() {
+    _mockEnquiries.addAll([
+      BuyerEnquiry(
+        id: 'seed-1',
+        buyerName: 'Rina Textiles, Jaipur',
+        channel: 'B2B Marketplace',
+        message: 'Interested in a bulk order — can you do 50 pieces?',
+        productDescription: 'Handwoven jute basket',
+        productPrice: 620,
+        receivedAt: DateTime.now().subtract(const Duration(hours: 5)),
+      ),
+      BuyerEnquiry(
+        id: 'seed-2',
+        buyerName: 'Direct Buyer · Ananya S.',
+        channel: 'Direct Buyer',
+        message: 'क्या थोक ऑर्डर के लिए छूट मिल सकती है?',
+        productDescription: 'Blue pottery vase',
+        productPrice: 850,
+        receivedAt: DateTime.now().subtract(const Duration(days: 1)),
+      ),
+    ]);
+  }
   static final ApiService instance = ApiService._();
 
   final List<Product> _catalog = [];
   List<Product> get catalog => List.unmodifiable(_catalog);
+
+  final List<BuyerEnquiry> _mockEnquiries = [];
+  List<BuyerEnquiry> get enquiries => List.unmodifiable(_mockEnquiries);
+
+  // In-progress Add Product draft, kept so the artisan can resume if
+  // they leave mid-flow (e.g. via the Home button) instead of losing
+  // their photo/voice note/price. Session-only.
+  ProductDraft? _savedDraft;
+  ProductDraft? get savedDraft => _savedDraft;
+  void saveDraft(ProductDraft draft) => _savedDraft = draft;
+  void clearDraft() => _savedDraft = null;
 
   void setAuthToken(String token) {
     AppConfig.authToken = token;
@@ -56,7 +108,7 @@ class ApiService {
   }
 
   Future<Product> _realProcessNewProduct(ProductDraft draft) async {
-    const baseUrl = AppConfig.apiBaseUrl;
+    final baseUrl = AppConfig.apiBaseUrl;
 
     // 1. Create Product
     final createUri = Uri.parse('$baseUrl/products');
@@ -190,7 +242,7 @@ class ApiService {
   // Product Catalog CRUD
   // =========================================================================
 
-  Future<List<Product>> fetchCatalog() async {
+  Future<List<Product>> fetchCatalog({String? artisanId}) async {
     if (AppConfig.useMockApi) {
       return catalog;
     }
@@ -258,11 +310,48 @@ class ApiService {
     } else {
       _catalog.insert(0, product);
     }
+    _maybeGenerateEnquiry(product);
 
     if (!AppConfig.useMockApi) {
       try {
         final uri = Uri.parse('${AppConfig.apiBaseUrl}/products/${product.id}/publish');
         await http.post(uri, headers: _headers);
+      } catch (_) {}
+    }
+  }
+
+  void updateProduct(Product updated) {
+    final index = _catalog.indexWhere((p) => p.id == updated.id);
+    if (index != -1) {
+      _catalog[index] = updated;
+    }
+    if (!AppConfig.useMockApi) {
+      try {
+        final intId = int.tryParse(updated.id);
+        if (intId != null) {
+          final uri = Uri.parse('${AppConfig.apiBaseUrl}/products/$intId');
+          http.put(
+            uri,
+            headers: _headers,
+            body: jsonEncode({
+              'description_en': updated.descriptionEn,
+              'description_hi': updated.descriptionHi,
+            }),
+          );
+        }
+      } catch (_) {}
+    }
+  }
+
+  void deleteProduct(String id) {
+    _catalog.removeWhere((p) => p.id == id);
+    if (!AppConfig.useMockApi) {
+      try {
+        final intId = int.tryParse(id);
+        if (intId != null) {
+          final uri = Uri.parse('${AppConfig.apiBaseUrl}/products/$intId');
+          http.delete(uri, headers: _headers);
+        }
       } catch (_) {}
     }
   }
@@ -631,5 +720,38 @@ class ApiService {
       final uri = Uri.parse('${AppConfig.apiBaseUrl}/notifications/read-all');
       await http.put(uri, headers: _headers);
     } catch (_) {}
+  }
+
+  // Mock buyer interest generator
+  static const _buyerNames = [
+    'Northern Crafts Co-op',
+    'Sunrise Home Decor',
+    'Meera Handicrafts Export',
+    'Direct Buyer · Kabir M.',
+    'Direct Buyer · Priya N.',
+  ];
+  static const _channels = ['B2B Marketplace', 'Government e-Marketplace', 'Direct Buyer'];
+  static const _messages = [
+    'Loved this piece! Is customization available?',
+    'Please share more photos and delivery timeline.',
+    'Interested in a bulk order — can you do 50 pieces?',
+    'क्या थोक ऑर्डर के लिए छूट मिल सकती है?',
+    'यह कितने दिनों में डिलीवर हो सकता है?',
+  ];
+
+  void _maybeGenerateEnquiry(Product product) {
+    final rand = Random();
+    _mockEnquiries.insert(
+      0,
+      BuyerEnquiry(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        buyerName: _buyerNames[rand.nextInt(_buyerNames.length)],
+        channel: _channels[rand.nextInt(_channels.length)],
+        message: _messages[rand.nextInt(_messages.length)],
+        productDescription: product.descriptionEn,
+        productPrice: product.price,
+        receivedAt: DateTime.now(),
+      ),
+    );
   }
 }

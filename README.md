@@ -16,13 +16,13 @@ KarigarConnect bridges traditional Indian artisans with wholesale B2B buyers usi
             │ HTTPS (REST)
             ▼
 ┌─────────────────────────┐
-│    FastAPI Backend       │
-│    (Python 3.12)        │
-└───┬───────┬─────────┬───┘
-    │       │         │
+│    FastAPI Backend      │ ◄────► ┌─────────────────────────┐
+│    (Python 3.12/3.13)   │        │   Artisan AI Service    │
+└───┬───────┬─────────┬───┘        │  (FastAPI + ML Pipeline)│
+    │       │         │            └─────────────────────────┘
     ▼       ▼         ▼
 ┌──────┐ ┌─────┐ ┌────────┐
-│ Post │ │ AI  │ │Firebase│
+│ Post │ │AI-  │ │Firebase│
 │ greSQL│ │Svc  │ │ Auth   │
 └──────┘ └─────┘ └────────┘
 ```
@@ -31,7 +31,7 @@ KarigarConnect bridges traditional Indian artisans with wholesale B2B buyers usi
 
 ## 🚀 Quick Start
 
-### Backend
+### 1. Backend Service (Person 3)
 ```bash
 cd backend
 python3 -m venv venv
@@ -42,7 +42,18 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 - API Docs: http://localhost:8000/docs
 - Health Check: http://localhost:8000/health
 
-### Frontend (Flutter)
+### 2. AI Services (Person 2)
+```bash
+cd ai-service
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port 9000 --reload
+```
+- Interactive AI Dashboard: http://localhost:9000/dashboard
+- AI Service Docs: http://localhost:9000/docs
+
+### 3. Frontend (Flutter — Person 1)
 ```bash
 # Ensure Flutter SDK is on PATH
 flutter pub get
@@ -50,20 +61,6 @@ flutter run                         # Android/iOS
 flutter run -d web-server --web-port=3000  # Web (for demo)
 ```
 - Web App: http://localhost:3000
-
-### Permissions (real device)
-**Android** — `android/app/src/main/AndroidManifest.xml`:
-```xml
-<uses-permission android:name="android.permission.CAMERA" />
-<uses-permission android:name="android.permission.RECORD_AUDIO" />
-```
-**iOS** — `ios/Runner/Info.plist`:
-```xml
-<key>NSCameraUsageDescription</key>
-<string>Used to photograph products</string>
-<key>NSMicrophoneUsageDescription</key>
-<string>Used to record product descriptions</string>
-```
 
 ---
 
@@ -77,8 +74,9 @@ flutter run -d web-server --web-port=3000  # Web (for demo)
 | **Add Product** | 3-step wizard: Photo → Voice Description → Raw Material Cost |
 | **Processing** | Animated interstitial while the AI pipeline runs |
 | **Preview** | Shows AI output: transcription, translation, description, suggested price |
+| **Product Detail** | Inspect, edit AI descriptions/prices, delete listings |
 | **Catalog** | Create digital collections, group products, publish to marketplace |
-| **Buyers** | Browse 8+ wholesale buyers, view AI match scores, send proposals |
+| **Buyers** | Browse wholesale buyers, view AI match scores, send proposals |
 | **Enquiries** | Track B2B deals (Pending/Contacted/Accepted/Rejected), respond to buyers |
 | **Marketplace** | Public feed of all published products and collections |
 | **Notifications** | In-app alerts with unread badge count |
@@ -119,6 +117,7 @@ flutter run -d web-server --web-port=3000  # Web (for demo)
 ### Enquiries (`/api/v1/enquiries`)
 | Method | Endpoint | Description |
 |--------|----------|-------------|
+| `GET` | `/` | List all enquiries for the artisan |
 | `GET` | `/{id}` | Get enquiry details |
 | `PUT` | `/{id}` | Update deal status + artisan response |
 
@@ -148,19 +147,6 @@ flutter run -d web-server --web-port=3000  # Web (for demo)
 | `PUT` | `/{id}/read` | Mark one as read |
 | `PUT` | `/read-all` | Mark all as read |
 
-### System
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/health` | Backend health check |
-| `GET` | `/health/db` | Database connectivity check |
-| `GET` | `/version` | API version info |
-
-### Users (`/api/v1/users`)
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/me` | Get current user profile |
-| `PUT` | `/me` | Update user profile |
-
 ---
 
 ## 🗄 Database Models (PostgreSQL + SQLAlchemy)
@@ -180,66 +166,10 @@ flutter run -d web-server --web-port=3000  # Web (for demo)
 
 ---
 
-## 🌐 Internationalization
-
-The app supports **full bilingual UI** (English & Hindi):
-- Language is selected on the first screen
-- All UI strings are centralized in `lib/language.dart`
-- The entire app rebuilds instantly when language changes
-- No bilingual mixing — choosing English shows only English; choosing Hindi shows only Hindi
-
----
-
-## 🎯 Hackathon Design Decisions
-
-1. **Mock Authentication**: Any phone number + any 4-digit OTP works. Ensures the live demo never fails due to SMS delays or API limits.
-2. **Synchronous AI Pipeline**: The `/process` endpoint runs synchronously (no Celery/Redis/Kafka). Simpler to demo, no background worker failures.
-3. **Database Seeding**: 8 realistic B2B buyers are auto-seeded on startup so the matching algorithm and buyer directory have data immediately.
-4. **No External Dependencies Required**: Cloudinary, Firebase, and AI services are all mocked. The app runs fully offline with just Python + PostgreSQL + Flutter.
-
----
-
-## 📂 Project Structure
-
-```
-KarigarConnect/
-├── lib/                          # Flutter frontend
-│   ├── main.dart                 # Entry point
-│   ├── theme.dart                # App theme (teal palette)
-│   ├── language.dart             # Bilingual string maps + language provider
-│   ├── config.dart               # API base URL config
-│   ├── models/                   # Data models (Product, Buyer, Enquiry, etc.)
-│   ├── screens/                  # All UI screens (11 screens)
-│   ├── services/api_service.dart # HTTP client singleton
-│   ├── widgets/                  # Reusable UI components
-│   └── utils/                    # Page transitions, helpers
-│
-├── backend/                      # FastAPI backend
-│   ├── app/
-│   │   ├── main.py               # FastAPI app + CORS + startup
-│   │   ├── config.py             # Environment configuration
-│   │   ├── database.py           # SQLAlchemy engine + session
-│   │   ├── firebase.py           # Firebase Admin SDK integration
-│   │   ├── seed.py               # Demo data seeder
-│   │   ├── api/                  # Route handlers (products, buyers, etc.)
-│   │   ├── models/               # SQLAlchemy ORM models
-│   │   ├── schemas/              # Pydantic request/response schemas
-│   │   └── services/             # Business logic (AI, pricing, matching)
-│   ├── alembic/                  # Database migrations
-│   ├── tests/                    # Automated backend tests
-│   ├── requirements.txt          # Python dependencies
-│   ├── Procfile                  # Render/Railway deployment
-│   └── Dockerfile                # Container deployment
-│
-└── pubspec.yaml                  # Flutter dependencies
-```
-
----
-
-## 👥 Team Roles
+## 👥 Team Roles & Responsibilities
 
 | Person | Responsibility |
 |--------|---------------|
-| **Person 1** | Flutter UI/UX, mobile app, camera/audio capture |
-| **Person 2** | ML models, computer vision, speech-to-text, AI pricing |
-| **Person 3** | FastAPI backend, PostgreSQL, APIs, marketplace, buyer matching |
+| **Person 1** | Flutter UI/UX, mobile app, camera/audio capture, localization |
+| **Person 2** | ML models, computer vision, background removal, speech-to-text, AI pricing (`ai-service/`) |
+| **Person 3** | FastAPI backend, PostgreSQL, APIs, marketplace, buyer matching (`backend/`) |

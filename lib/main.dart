@@ -16,7 +16,7 @@ class ArtisanApp extends StatelessWidget {
       listenable: AppLanguage.instance,
       builder: (context, child) {
         return MaterialApp(
-          title: 'Artisan App',
+          title: 'KarigarConnect',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.theme,
           home: const LanguageSelectScreen(),
