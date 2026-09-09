@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -20,16 +21,33 @@ class SafeImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget child;
-    if (url != null) {
-      child = Image.network(
-        url!,
-        fit: fit,
-        width: double.infinity,
-        height: double.infinity,
-        loadingBuilder: (context, widget, progress) =>
-            progress == null ? widget : _placeholder(),
-        errorBuilder: (context, error, stack) => _placeholder(),
-      );
+    if (url != null && url!.isNotEmpty) {
+      if (url!.startsWith('data:image')) {
+        try {
+          final commaIndex = url!.indexOf(',');
+          final base64String = commaIndex != -1 ? url!.substring(commaIndex + 1) : url!;
+          final bytes = base64Decode(base64String);
+          child = Image.memory(
+            bytes,
+            fit: fit,
+            width: double.infinity,
+            height: double.infinity,
+            errorBuilder: (context, error, stack) => _placeholder(),
+          );
+        } catch (_) {
+          child = _placeholder();
+        }
+      } else {
+        child = Image.network(
+          url!,
+          fit: fit,
+          width: double.infinity,
+          height: double.infinity,
+          loadingBuilder: (context, widget, progress) =>
+              progress == null ? widget : _placeholder(),
+          errorBuilder: (context, error, stack) => _placeholder(),
+        );
+      }
     } else if (file != null && !kIsWeb) {
       child = AnimatedSwitcher(
         duration: const Duration(milliseconds: 250),

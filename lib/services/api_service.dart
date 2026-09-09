@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 import 'package:http/http.dart' as http;
 import '../config.dart';
@@ -99,19 +100,66 @@ class ApiService {
       throw Exception('AI processing failed: ${response.statusCode} ${response.body}');
     }
 
-    // TODO(person1): once Person 2/3 confirm the live response shape,
-    // parse response.body (JSON) into a Product here, e.g.:
-    //   final json = jsonDecode(response.body);
-    //   return Product(id: json['id'] ?? ..., imageUrl: json['image_url'], ...);
-    throw UnimplementedError('Parse the real AI response once /products/process is live.');
+    final Map<String, dynamic> json = jsonDecode(utf8.decode(response.bodyBytes));
+    return Product(
+      id: json['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      image: draft.photo,
+      imageUrl: json['image_url']?.toString(),
+      descriptionHi: json['description_hi']?.toString() ?? '',
+      descriptionEn: json['description_en']?.toString() ?? '',
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
+      priceReason: json['price_reason']?.toString() ?? '',
+    );
   }
 
-  void publish(Product product) {
+  Future<void> publish(Product product) async {
     _catalog.add(product);
     _maybeGenerateEnquiry(product);
-    // TODO(person3): also POST to {apiBaseUrl}/products per
-    // API_CONTRACT.md section 2 once useMockApi is false, so the
-    // catalog persists server-side instead of only in memory.
+    if (!AppConfig.useMockApi) {
+      try {
+        final uri = Uri.parse('${AppConfig.apiBaseUrl}/products');
+        await http.post(
+          uri,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'image_url': product.imageUrl ?? '',
+            'description_hi': product.descriptionHi,
+            'description_en': product.descriptionEn,
+            'price': product.price,
+            'price_reason': product.priceReason,
+          }),
+        );
+      } catch (e) {
+        // Fallback: product remains safe in local in-memory catalog
+      }
+    }
+  }
+
+  /// Fetches latest catalog from backend server per API_CONTRACT.md section 3.
+  Future<List<Product>> fetchCatalog({String? artisanId}) async {
+    if (AppConfig.useMockApi) {
+      return catalog;
+    }
+    try {
+      final queryParam = artisanId != null ? '?artisan_id=$artisanId' : '';
+      final uri = Uri.parse('${AppConfig.apiBaseUrl}/products$queryParam');
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        final List<dynamic> list = jsonDecode(utf8.decode(response.bodyBytes));
+        _catalog.clear();
+        for (final item in list) {
+          _catalog.add(Product(
+            id: item['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
+            imageUrl: item['image_url']?.toString(),
+            descriptionHi: item['description_hi']?.toString() ?? '',
+            descriptionEn: item['description_en']?.toString() ?? '',
+            price: (item['price'] as num?)?.toDouble() ?? 0.0,
+            priceReason: item['price_reason']?.toString() ?? '',
+          ));
+        }
+      }
+    } catch (_) {}
+    return catalog;
   }
 
   void updateProduct(Product updated) {

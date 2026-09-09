@@ -1,0 +1,27 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+*.egg-info/
+.venv/
+venv/
+
+# OS
+.DS_Store
+
+# ML artifacts / datasets (large or generated — do not commit by default)
+ml/datasets/*
+!ml/datasets/.gitkeep
+ml/models/*.pkl
+ml/models/*.joblib
+
+# Editor
+.vscode/
+.idea/

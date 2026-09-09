@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+pydantic
+python-multipart>=0.0.9
+pillow
+rembg
+opencv-python
+numpy
+google-genai
+openai-whisper
+imageio-ffmpeg
+pytest
+httpx
+requests

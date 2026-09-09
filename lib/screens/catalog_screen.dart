@@ -16,9 +16,17 @@ class CatalogScreen extends StatefulWidget {
 }
 
 class _CatalogScreenState extends State<CatalogScreen> {
+  @override
+  void initState() {
+    super.initState();
+    ApiService.instance.fetchCatalog().then((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
   Future<void> _refresh() async {
-    await Future.delayed(const Duration(milliseconds: 400));
-    setState(() {});
+    await ApiService.instance.fetchCatalog();
+    if (mounted) setState(() {});
   }
 
   @override
